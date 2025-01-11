@@ -32,13 +32,27 @@ exports.handler = async (event) => {
 
         if (error) throw error;
 
+        // Create an object to store the latest version of each word
+        const latestImages = {};
+        
+        // Process the data to get latest images
+        data.forEach(item => {
+            if (item.content && item.content.images) {
+                Object.entries(item.content.images).forEach(([word, image]) => {
+                    if (!latestImages[word]) {
+                        latestImages[word] = image;
+                    }
+                });
+            }
+        });
+
         return {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify({ data: { images: latestImages } })
         };
     } catch (error) {
         console.error('Error:', error);

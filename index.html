@@ -363,6 +363,25 @@
             max-width: 400px;
         }
 
+        .auth-toggle {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+
+        .auth-toggle button {
+            background: none;
+            border: none;
+            color: #007AFF;
+            cursor: pointer;
+            padding: 0 5px;
+            font-size: inherit;
+        }
+
+        .auth-toggle button:hover {
+            text-decoration: underline;
+        }
+
         .login-form {
             width: 100%;
             max-width: 320px;
@@ -416,7 +435,13 @@
                     <input type="checkbox" id="rememberMe">
                     <label for="rememberMe">Remember me</label>
                 </div>
-                <button onclick="handleLogin()">Login</button>
+                <button onclick="handleAuth()">
+                    <span id="authButtonText">Login</span>
+                </button>
+                <div class="auth-toggle">
+                    <span id="authToggleText">Don't have an account?</span>
+                    <button onclick="toggleAuthMode(event)">Sign up</button>
+                </div>
             </div>
         </div>
         <div class="input-area">
@@ -471,6 +496,7 @@
     <script>
     let currentPassphrase = '';
     let customImages = {};
+    let isLoginMode = true;
 
     // Check for saved passphrase and load data when app starts
     document.addEventListener('DOMContentLoaded', async function() {
@@ -682,219 +708,195 @@ const confirmed = confirm(
         urlArea.style.display = urlArea.style.display === 'none' ? 'block' : 'none';
     }
 
-    function handleImageFile(file) {
-    console.log('File size:', file.size / 1024 / 1024, 'MB');
-    
-    if (file.size > 1024 * 1024) { // If larger than 1MB
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            // Create a temporary image to resize
-            const img = new Image();
-            img.onload = function() {
-                // Create canvas
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                
-                // Calculate new dimensions
-                if (width > 800 || height > 800) {
-                    if (width > height) {
-                        height *= 800 / width;
-                        width = 800;
-                    } else {
-                        width *= 800 / height;
-                        height = 800;
-                    }
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Draw and compress
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to base64 with compression
-                const compressedData = canvas.toDataURL('image/jpeg', 0.6);
-                console.log('Compressed size:', compressedData.length / 1024 / 1024, 'MB');
-                
-                const word = document.getElementById('word-input').value.toLowerCase();
-                if (word) {
-                    customImages[word] = compressedData;
-                    storeData({ images: customImages }).then(() => {
-                        alert(`Image added for the word "${word}"`);
-                        hideImageModal();
-                        document.getElementById('word-input').value = '';
-                    }).catch(err => {
-                        console.error('Failed to store image:', err);
-                        alert('Failed to save image. Please try again with a smaller image.');
-                    });
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    } else {
-        // Original code for small files
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const word = document.getElementById('word-input').value.toLowerCase();
-            if (word) {
-                customImages[word] = e.target.result;
-                storeData({ images: customImages }).then(() => {
-                    alert(`Image added for the word "${word}"`);
-                    hideImageModal();
-                    document.getElementById('word-input').value = '';
-                }).catch(err => {
-                    console.error('Failed to store image:', err);
-                    alert('Failed to save image. Please try again.');
-                });
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function addImageFromUrl() {
-    const word = document.getElementById('word-input').value.toLowerCase();
-    const url = document.getElementById('url-input').value;
-    
-    if (word && url) {
-        customImages[word] = url;
-        alert(`Image added for the word "${word}"`);
-        hideImageModal();
-        document.getElementById('word-input').value = '';
-        document.getElementById('url-input').value = '';
-
-        // Automatically save data after adding an image
-        storeData({ images: customImages });
-    } else {
-        alert('Please enter both a word and an image URL');
-    }
-}
-
-async function storeData(data) {
-    try {
-        console.log('Attempting to store data:', {
-            passphrase: currentPassphrase,
-            dataSize: JSON.stringify(data).length
-        });
-        
-        const response = await fetch('/api/storage', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                passphrase: currentPassphrase,
-                data: data,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server error:', {
-                status: response.status,
-                statusText: response.statusText,
-                error: errorText
-            });
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log('Storage successful:', result);
-        return result;
-    } catch (error) {
-        console.error('Storage error:', error);
-        alert('Failed to save image. Error: ' + error.message);
-        throw error;
-    }
-}
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    const display = document.getElementById('display');
-    display.addEventListener('touchstart', handleTouchStart);
-    display.addEventListener('touchmove', handleTouchMove);
-    display.addEventListener('touchend', handleTouchEnd);
-    
-    // Initialize empty cards wrapper and progress dots
-    display.querySelector('.cards-wrapper').innerHTML = '';
-    display.querySelector('.progress-dots').innerHTML = '';
-});
-
-document.getElementById('input').addEventListener('input', displayCards);
-
-document.getElementById('camera-input').addEventListener('change', function(e) {
-    if (e.target.files && e.target.files[0]) {
-        handleImageFile(e.target.files[0]);
-    }
-});
-
-document.getElementById('gallery-input').addEventListener('change', function(e) {
-    if (e.target.files && e.target.files[0]) {
-        handleImageFile(e.target.files[0]);
-    }
-});
-
-async function handleLogin() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
-
-    try {
-        const response = await fetch('/.netlify/functions/auth', {
-            method: 'POST',
-            body: JSON.stringify({ email, password, rememberMe }),
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            localStorage.setItem('token', data.token);
-            document.getElementById('loginScreen').style.display = 'none';
-            // Load user's data here
-            loadUserData();
-        } else {
-            alert('Invalid email or password');
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('An error occurred during login');
-    }
-}
-
-async function loadUserData() {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            document.getElementById('loginScreen').style.display = 'flex';
+    async function handleImageFile(file) {
+        const word = document.getElementById('word-input').value.toLowerCase();
+        if (!word) {
+            alert('Please enter a word first');
             return;
         }
 
-        const response = await fetch('/.netlify/functions/retrieve', {
-            headers: {
-                'Authorization': `Bearer ${token}`
+        const reader = new FileReader();
+        reader.onloadend = async function() {
+            const base64Data = reader.result;
+            customImages[word] = base64Data;
+            try {
+                await storeData({ images: { [word]: base64Data } });
+                alert(`Image added for the word "${word}"`);
+                hideImageModal();
+                document.getElementById('word-input').value = '';
+                displayCards(); // Refresh the display
+            } catch (error) {
+                console.error('Failed to store image:', error);
             }
-        });
+        };
+        reader.readAsDataURL(file);
+    }
 
-        if (response.ok) {
-            const data = await response.json();
-            // Update the display with user's data
-            updateDisplay(data);
+    async function addImageFromUrl() {
+        const word = document.getElementById('word-input').value.toLowerCase();
+        const url = document.getElementById('url-input').value;
+        
+        if (word && url) {
+            customImages[word] = url;
+            try {
+                await storeData({ images: { [word]: url } });
+                alert(`Image added for the word "${word}"`);
+                hideImageModal();
+                document.getElementById('word-input').value = '';
+                document.getElementById('url-input').value = '';
+                displayCards(); // Refresh the display
+            } catch (error) {
+                console.error('Failed to store image:', error);
+            }
         } else {
+            alert('Please enter both a word and an image URL');
+        }
+    }
+
+    async function storeData(data) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Not authenticated');
+            }
+
+            const response = await fetch('/.netlify/functions/storage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    content: data
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText
+                });
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Storage successful:', result);
+            return result;
+        } catch (error) {
+            console.error('Storage error:', error);
+            alert('Failed to save image. Please try logging in again.');
+            document.getElementById('loginScreen').style.display = 'flex';
+            throw error;
+        }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        const display = document.getElementById('display');
+        display.addEventListener('touchstart', handleTouchStart);
+        display.addEventListener('touchmove', handleTouchMove);
+        display.addEventListener('touchend', handleTouchEnd);
+        
+        // Initialize empty cards wrapper and progress dots
+        display.querySelector('.cards-wrapper').innerHTML = '';
+        display.querySelector('.progress-dots').innerHTML = '';
+    });
+
+    document.getElementById('input').addEventListener('input', displayCards);
+
+    document.getElementById('camera-input').addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+
+    document.getElementById('gallery-input').addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            handleImageFile(e.target.files[0]);
+        }
+    });
+
+    function toggleAuthMode(event) {
+        event.preventDefault();
+        isLoginMode = !isLoginMode;
+        const buttonText = document.getElementById('authButtonText');
+        const toggleText = document.getElementById('authToggleText');
+        const toggleButton = event.target;
+
+        if (isLoginMode) {
+            buttonText.textContent = 'Login';
+            toggleText.textContent = "Don't have an account?";
+            toggleButton.textContent = 'Sign up';
+        } else {
+            buttonText.textContent = 'Sign up';
+            toggleText.textContent = 'Already have an account?';
+            toggleButton.textContent = 'Login';
+        }
+    }
+
+    async function handleAuth() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+
+        try {
+            const endpoint = isLoginMode ? 'auth' : 'signup';
+            const response = await fetch(`/.netlify/functions/${endpoint}`, {
+                method: 'POST',
+                body: JSON.stringify({ email, password, rememberMe }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                document.getElementById('loginScreen').style.display = 'none';
+                loadUserData();
+            } else {
+                const error = await response.json();
+                alert(error.error || (isLoginMode ? 'Invalid email or password' : 'Failed to create account'));
+            }
+        } catch (error) {
+            console.error('Auth error:', error);
+            alert('An error occurred during ' + (isLoginMode ? 'login' : 'signup'));
+        }
+    }
+
+    async function loadUserData() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                document.getElementById('loginScreen').style.display = 'flex';
+                return;
+            }
+
+            const response = await fetch('/.netlify/functions/retrieve', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const { data } = await response.json();
+                if (data && data.images) {
+                    customImages = data.images;
+                    displayCards();
+                }
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
+        } catch (error) {
+            console.error('Error loading data:', error);
             document.getElementById('loginScreen').style.display = 'flex';
         }
-    } catch (error) {
-        console.error('Error loading data:', error);
-        document.getElementById('loginScreen').style.display = 'flex';
     }
-}
 
-// Call this when the page loads
-document.addEventListener('DOMContentLoaded', loadUserData);
+    // Call this when the page loads
+    document.addEventListener('DOMContentLoaded', loadUserData);
 </script>
 </body>
 </html>
