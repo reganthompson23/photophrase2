@@ -16,15 +16,20 @@ exports.handler = async (event) => {
     try {
         const { email, password } = JSON.parse(event.body);
 
-        // Sign up the user
+        // Sign up with auto-confirm enabled
         const { data: signupData, error: signupError } = await supabase.auth.signUp({
             email,
-            password
+            password,
+            options: {
+                data: {
+                    email_confirmed: true
+                }
+            }
         });
 
         if (signupError) throw signupError;
 
-        // If signup successful, immediately sign them in
+        // Immediately sign them in
         const { data: signinData, error: signinError } = await supabase.auth.signInWithPassword({
             email,
             password
