@@ -333,30 +333,92 @@
         .passphrase-button:hover {
             background: #1d4ed8;
         }
+
+        /* Login screen styles */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .login-screen h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .login-screen p {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 400px;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 12px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .login-form button:hover {
+            background: #0056b3;
+        }
+
+        .login-form .remember-me {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .login-form .remember-me input {
+            width: auto;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
-    <div class="passphrase-screen" id="passphraseScreen">
-        <h1 class="main-title">PhotoPhrase AAC App</h1>
-        <p class="app-description">
-            This app allows you to create image-word pairs that your child will easily recognise so you can effectively communicate with them.
-        </p>
-        <p class="info-text">
-            If this is your first time using PhotoPhrase you'll want to create a hyper-unique passphrase.<br><br>
-            This will act as your username and password in one.<br><br>
-            Type it and screenshot it so you never lose it.<br><br>
-            Then click remember me so you auto log in on for future use.<br><br>
-            Save the app to your phones homescreen so it appears on your phone like any other app for easy and quick access in future.
-        </p>
-        <input type="text" class="passphrase-input" id="passphraseInput" placeholder="Enter or create your passphrase">
-        <div class="remember-me-container">
-            <input type="checkbox" id="rememberPassphrase">
-            <label for="rememberPassphrase">Remember me</label>
-        </div>
-        <button class="passphrase-button" onclick="handlePassphrase()">Continue</button>
-    </div>
-
     <div class="app-container">
+        <div class="login-screen" id="loginScreen">
+            <h1>PhotoPhrase AAC App</h1>
+            <p>This app allows you to create image-word pairs that your child will easily recognise so you can effectively communicate with them.</p>
+            <div class="login-form">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+                <button onclick="handleLogin()">Login</button>
+            </div>
+        </div>
         <div class="input-area">
             <input type="text" id="input" placeholder="Enter your phrase..." />
         </div>
@@ -774,6 +836,65 @@ document.getElementById('gallery-input').addEventListener('change', function(e) 
         handleImageFile(e.target.files[0]);
     }
 });
+
+async function handleLogin() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
+
+    try {
+        const response = await fetch('/.netlify/functions/auth', {
+            method: 'POST',
+            body: JSON.stringify({ email, password, rememberMe }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            document.getElementById('loginScreen').style.display = 'none';
+            // Load user's data here
+            loadUserData();
+        } else {
+            alert('Invalid email or password');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login');
+    }
+}
+
+async function loadUserData() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            document.getElementById('loginScreen').style.display = 'flex';
+            return;
+        }
+
+        const response = await fetch('/.netlify/functions/retrieve', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Update the display with user's data
+            updateDisplay(data);
+        } else {
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('loginScreen').style.display = 'flex';
+    }
+}
+
+// Call this when the page loads
+document.addEventListener('DOMContentLoaded', loadUserData);
 </script>
 </body>
 </html>

@@ -1,93 +1,58 @@
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
+
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_ANON_KEY
 );
-exports.handler = async function(event, context) {
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+
+exports.handler = async (event) => {
+    // Check for authorization header
+    const authHeader = event.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({ error: 'Unauthorized' })
+        };
     }
-    
+
+    const token = authHeader.split(' ')[1];
+
     try {
-        const { passphrase, data } = JSON.parse(event.body);
+        // Verify the token and get user data
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         
-        if (!passphrase || !data || !data.images) {
-            return { 
-                statusCode: 400,
-                body: JSON.stringify({ error: 'Missing required fields' })
-            };
-        }
-        // Get just the newest word-image pair
-        const newWord = Object.keys(data.images)[Object.keys(data.images).length - 1];
-        const newImage = data.images[newWord];
+        if (authError) throw authError;
 
-        // Try to find existing row for this word
-        const { data: existingData } = await supabase
+        // Parse the request body
+        const { content } = JSON.parse(event.body);
+
+        // Store the content with the user's ID
+        const { data, error } = await supabase
             .from('stored_items')
-            .select()
-            .eq('passphrase', passphrase)
-            .contains('content', { images: { [newWord]: null } })
-            .single();
+            .insert([
+                {
+                    user_id: user.id,
+                    content: content
+                }
+            ]);
 
-        if (existingData) {
-            // Update existing row with new image
-            const { error: updateError } = await supabase
-                .from('stored_items')
-                .update({
-                    content: {
-                        images: {
-                            [newWord]: newImage
-                        }
-                    },
-                    created_at: new Date().toISOString()
-                })
-                .eq('id', existingData.id);
-
-            if (updateError) {
-                console.error('Update error:', updateError);
-                return {
-                    statusCode: 500,
-                    body: JSON.stringify({ error: 'Failed to update image' })
-                };
-            }
-        } else {
-            // Create new row if word doesn't exist
-            const { error: insertError } = await supabase
-                .from('stored_items')
-                .insert([{
-                    passphrase,
-                    content: {
-                        images: {
-                            [newWord]: newImage
-                        }
-                    },
-                    created_at: new Date().toISOString()
-                }]);
-
-            if (insertError) {
-                console.error('Insert error:', insertError);
-                return {
-                    statusCode: 500,
-                    body: JSON.stringify({ error: 'Failed to store data' })
-                };
-            }
-        }
+        if (error) throw error;
 
         return {
             statusCode: 200,
             headers: {
                 'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify({
-                message: 'Data stored successfully',
-                status: 'success'
-            })
+            body: JSON.stringify({ success: true })
         };
     } catch (error) {
-        console.error('Function error:', error);
+        console.error('Error:', error);
         return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to process request' })
+            statusCode: error.status || 500,
+            body: JSON.stringify({
+                error: error.message || 'Internal server error'
+            })
         };
     }
 };
