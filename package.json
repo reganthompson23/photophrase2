@@ -1,0 +1,13 @@
+{
+  "name": "photophrase",
+  "version": "1.0.0",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.12"
+  },
+  "scripts": {
+    "build": "netlify-lambda build netlify/functions"
+  },
+  "devDependencies": {
+    "netlify-lambda": "^2.0.16"
+  }
+}

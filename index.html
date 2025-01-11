@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PhotoPhrase AAC - Non Speaking Communication App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+
+        .app-container {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            overflow: hidden;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .marketing-link {
+            background: white;
+            width: 100%;
+            text-align: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+            flex: 0 0 auto;
+        }
+
+        .marketing-link a {
+            color: #999 !important;
+            font-size: 11px !important;
+            text-decoration: none !important;
+            font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            display: inline-block;
+        }
+
+        #input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #display {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .cards-wrapper {
+            position: absolute;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-out;
+        }
+
+        .card {
+            flex: 0 0 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 0px 0px 0px 0px;
+            position: relative;
+        }
+
+        .card img {
+            max-width: 100%;
+            height: 110vh;
+            object-fit: cover;
+            border-radius: 0px;
+        }
+
+        .word {
+            width: 100%;
+            height: 75px;
+            position: absolute;
+            top: 0px;
+            left: 0;
+            right: 0;
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px !important;
+        }
+
+        .progress-dots {
+            position: absolute;
+            bottom: 120px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 90;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+
+        .dot.active {
+            background: #007AFF;
+        }
+
+        .add-image-button {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: #007AFF;
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .add-image-button:active {
+            transform: scale(0.95);
+        }
+
+        .image-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            padding: 20px;
+            max-width: 400px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        #word-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .image-input-button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .camera-button {
+            background: #007AFF;
+            color: white;
+        }
+
+        .gallery-button {
+            background: #34C759;
+            color: white;
+        }
+
+        .url-button {
+            background: #FF9500;
+            color: white;
+        }
+
+        .url-input-area {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .url-input-area input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 10px;
+            line-height: 1;
+        }
+
+        /* Enhanced passphrase screen styles */
+        .passphrase-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .main-title {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .app-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #444;
+            margin: 8px 0 24px 0;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .info-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #666;
+            margin: 0 0 20px 0;
+            padding: 12px 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            max-width: 400px;
+        }
+
+        .passphrase-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .remember-me-container {
+            margin: 16px 0;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #rememberPassphrase {
+            width: 16px;
+            height: 16px;
+        }
+
+        #rememberPassphrase + label {
+            font-size: 14px;
+            color: #444;
+        }
+
+        .passphrase-button {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .passphrase-button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="passphrase-screen" id="passphraseScreen">
+        <h1 class="main-title">PhotoPhrase AAC App</h1>
+        <p class="app-description">
+            This app allows you to create image-word pairs that your child will easily recognise so you can effectively communicate with them.
+        </p>
+        <p class="info-text">
+            If this is your first time using PhotoPhrase you'll want to create a hyper-unique passphrase.<br><br>
+            This will act as your username and password in one.<br><br>
+            Type it and screenshot it so you never lose it.<br><br>
+            Then click remember me so you auto log in on for future use.<br><br>
+            Save the app to your phones homescreen so it appears on your phone like any other app for easy and quick access in future.
+        </p>
+        <input type="text" class="passphrase-input" id="passphraseInput" placeholder="Enter or create your passphrase">
+        <div class="remember-me-container">
+            <input type="checkbox" id="rememberPassphrase">
+            <label for="rememberPassphrase">Remember me</label>
+        </div>
+        <button class="passphrase-button" onclick="handlePassphrase()">Continue</button>
+    </div>
+
+    <div class="app-container">
+        <div class="input-area">
+            <input type="text" id="input" placeholder="Enter your phrase..." />
+        </div>
+        <div class="marketing-link">
+            <a href="https://photophraseapp.com">visit photophraseapp.com</a>
+        </div>
+        <div id="display">
+            <div class="cards-wrapper"></div>
+            <div class="progress-dots"></div>
+        </div>
+        <button class="add-image-button" onclick="showImageModal()">+</button>
+
+        <!-- Modal -->
+        <div class="image-modal" id="imageModal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="hideImageModal()">×</button>
+                <input type="text" id="word-input" placeholder="Enter a word" />
+                
+                <button class="image-input-button camera-button" onclick="activateCamera()">
+                    📸 Take Photo
+                </button>
+                
+                <button class="image-input-button gallery-button" onclick="openGallery()">
+                    🖼️ Choose from Gallery
+                </button>
+                
+                <button class="image-input-button url-button" onclick="toggleUrlInput()">
+                    🔗 Enter URL
+                </button>
+
+                <div class="url-input-area" id="urlInputArea">
+                    <input type="text" id="url-input" placeholder="Enter image URL" />
+                    <button class="image-input-button" onclick="addImageFromUrl()">Add URL Image</button>
+                </div>
+
+                <input type="file" 
+                       id="camera-input" 
+                       class="file-input" 
+                       accept="image/*" 
+                       capture="environment">
+                
+                <input type="file" 
+                       id="gallery-input" 
+                       class="file-input" 
+                       accept="image/*">
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let currentPassphrase = '';
+    let customImages = {};
+
+    // Check for saved passphrase and load data when app starts
+    document.addEventListener('DOMContentLoaded', async function() {
+        const savedPassphrase = localStorage.getItem('savedPassphrase');
+        if (savedPassphrase) {
+            currentPassphrase = savedPassphrase;
+            document.getElementById('passphraseScreen').style.display = 'none';
+            await retrieveData();
+        }
+    });
+
+    // New function to retrieve data from Supabase
+    async function retrieveData() {
+        if (!currentPassphrase) return;
+        
+        try {
+            const response = await fetch('/api/retrieve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    passphrase: currentPassphrase,
+                }),
+            });
+
+            const result = await response.json();
+            if (response.ok && result.data && result.data.images) {
+                customImages = result.data.images;
+                displayCards(); // Refresh display with retrieved images
+            }
+        } catch (error) {
+            console.error('Error retrieving data:', error);
+        }
+    }
+
+    async function handlePassphrase() {
+        const passphrase = document.getElementById('passphraseInput').value;
+        if (passphrase.length < 4) {
+            alert('Passphrase must be at least 4 characters');
+            return;
+        }
+
+        // Add new warning message about uniqueness
+const confirmed = confirm(
+    'IMPORTANT: Make sure your passphrase is hyper unique!\n\n' + 
+    'Press OK if you\'re a returning user using an existing passphrase.\n\n' +
+    '- Use something hyper unique that nobody else could ever accidentally also use.\n' +
+    '- If someone else uses the same passphrase, you will see and overwrite each others cards.\n' +
+    '- Ensure you have written down your passphrase accurately before selecting "Remember me".\n' +
+    '- If you lose/forget your passphrase you will lose all your cards.\n\n' +
+    'Are you sure you want to use this passphrase? Passphrases are case sensitive!'
+);
+
+        if (!confirmed) {
+            return;
+        }
+        
+        currentPassphrase = passphrase;
+        
+        // Save passphrase if remember me is checked
+        if (document.getElementById('rememberPassphrase').checked) {
+            localStorage.setItem('savedPassphrase', passphrase);
+        }
+        
+        document.getElementById('passphraseScreen').style.display = 'none';
+        await retrieveData(); // Retrieve data when passphrase is entered
+    }
+        
+    const colors = [
+        '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6', 
+        '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
+        '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A', 
+        '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
+    ];
+
+    let startX = 0;
+    let currentIndex = 0;
+
+    function getColor(word) {
+        let hash = 0;
+        for (let i = 0; i < word.length; i++) {
+            hash = word.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    function fitTextToContainer(element) {
+        let fontSize = 24;
+        element.style.fontSize = fontSize + 'px';
+        
+        while (element.scrollWidth > element.offsetWidth || element.scrollHeight > element.offsetHeight) {
+            fontSize--;
+            element.style.fontSize = fontSize + 'px';
+            if (fontSize <= 8) break;
+        }
+    }
+
+    function updateCardPositions() {
+        const wrapper = document.querySelector('.cards-wrapper');
+        wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+        // Update dots
+        const dots = document.querySelectorAll('.dot');
+        dots.forEach((dot, index) => {
+            dot.className = `dot${index === currentIndex ? ' active' : ''}`;
+        });
+    }
+
+    function displayCards() {
+        const input = document.getElementById('input').value.toLowerCase();
+        const words = input.split(' ').filter(word => word.length > 0);
+        const wrapper = document.querySelector('.cards-wrapper');
+        const dotsContainer = document.querySelector('.progress-dots');
+        
+        wrapper.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        currentIndex = 0;
+
+        words.forEach((word, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            if (customImages[word]) {
+                const img = document.createElement('img');
+                img.src = customImages[word];
+                img.alt = word;
+                card.appendChild(img);
+            } else {
+                card.style.backgroundColor = getColor(word);
+            }
+            
+            const wordElement = document.createElement('div');
+            wordElement.className = 'word';
+            wordElement.textContent = word;
+            card.appendChild(wordElement);
+            
+            wrapper.appendChild(card);
+            
+            // Add dot
+            const dot = document.createElement('div');
+            dot.className = `dot${index === 0 ? ' active' : ''}`;
+            dotsContainer.appendChild(dot);
+            
+            fitTextToContainer(wordElement);
+        });
+
+        updateCardPositions();
+    }
+
+    function handleTouchStart(e) {
+        startX = e.touches[0].clientX;
+    }
+
+    function handleTouchMove(e) {
+        const touch = e.touches[0];
+        const diff = touch.clientX - startX;
+        const wrapper = document.querySelector('.cards-wrapper');
+        const cards = wrapper.children;
+        
+        if (!cards.length) return;
+        
+        const offset = -currentIndex * 100 + (diff / wrapper.offsetWidth * 100);
+        wrapper.style.transition = 'none';
+        wrapper.style.transform = `translateX(${offset}%)`;
+    }
+
+    function handleTouchEnd(e) {
+        const wrapper = document.querySelector('.cards-wrapper');
+        const cards = wrapper.children;
+        
+        if (!cards.length) return;
+        
+        const diff = e.changedTouches[0].clientX - startX;
+        const threshold = wrapper.offsetWidth * 0.2;
+
+        wrapper.style.transition = 'transform 0.3s ease-out';
+
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0 && currentIndex > 0) {
+                currentIndex--;
+            } else if (diff < 0 && currentIndex < cards.length - 1) {
+                currentIndex++;
+            }
+        }
+
+        updateCardPositions();
+    }
+
+    function showImageModal() {
+        document.getElementById('imageModal').style.display = 'block';
+    }
+
+    function hideImageModal() {
+        document.getElementById('imageModal').style.display = 'none';
+        document.getElementById('urlInputArea').style.display = 'none';
+    }
+
+    function activateCamera() {
+        document.getElementById('camera-input').click();
+    }
+
+    function openGallery() {
+        document.getElementById('gallery-input').click();
+    }
+
+    function toggleUrlInput() {
+        const urlArea = document.getElementById('urlInputArea');
+        urlArea.style.display = urlArea.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function handleImageFile(file) {
+    console.log('File size:', file.size / 1024 / 1024, 'MB');
+    
+    if (file.size > 1024 * 1024) { // If larger than 1MB
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Create a temporary image to resize
+            const img = new Image();
+            img.onload = function() {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Calculate new dimensions
+                if (width > 800 || height > 800) {
+                    if (width > height) {
+                        height *= 800 / width;
+                        width = 800;
+                    } else {
+                        width *= 800 / height;
+                        height = 800;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to base64 with compression
+                const compressedData = canvas.toDataURL('image/jpeg', 0.6);
+                console.log('Compressed size:', compressedData.length / 1024 / 1024, 'MB');
+                
+                const word = document.getElementById('word-input').value.toLowerCase();
+                if (word) {
+                    customImages[word] = compressedData;
+                    storeData({ images: customImages }).then(() => {
+                        alert(`Image added for the word "${word}"`);
+                        hideImageModal();
+                        document.getElementById('word-input').value = '';
+                    }).catch(err => {
+                        console.error('Failed to store image:', err);
+                        alert('Failed to save image. Please try again with a smaller image.');
+                    });
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        // Original code for small files
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const word = document.getElementById('word-input').value.toLowerCase();
+            if (word) {
+                customImages[word] = e.target.result;
+                storeData({ images: customImages }).then(() => {
+                    alert(`Image added for the word "${word}"`);
+                    hideImageModal();
+                    document.getElementById('word-input').value = '';
+                }).catch(err => {
+                    console.error('Failed to store image:', err);
+                    alert('Failed to save image. Please try again.');
+                });
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function addImageFromUrl() {
+    const word = document.getElementById('word-input').value.toLowerCase();
+    const url = document.getElementById('url-input').value;
+    
+    if (word && url) {
+        customImages[word] = url;
+        alert(`Image added for the word "${word}"`);
+        hideImageModal();
+        document.getElementById('word-input').value = '';
+        document.getElementById('url-input').value = '';
+
+        // Automatically save data after adding an image
+        storeData({ images: customImages });
+    } else {
+        alert('Please enter both a word and an image URL');
+    }
+}
+
+async function storeData(data) {
+    try {
+        console.log('Attempting to store data:', {
+            passphrase: currentPassphrase,
+            dataSize: JSON.stringify(data).length
+        });
+        
+        const response = await fetch('/api/storage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                passphrase: currentPassphrase,
+                data: data,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorText
+            });
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Storage successful:', result);
+        return result;
+    } catch (error) {
+        console.error('Storage error:', error);
+        alert('Failed to save image. Error: ' + error.message);
+        throw error;
+    }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    const display = document.getElementById('display');
+    display.addEventListener('touchstart', handleTouchStart);
+    display.addEventListener('touchmove', handleTouchMove);
+    display.addEventListener('touchend', handleTouchEnd);
+    
+    // Initialize empty cards wrapper and progress dots
+    display.querySelector('.cards-wrapper').innerHTML = '';
+    display.querySelector('.progress-dots').innerHTML = '';
+});
+
+document.getElementById('input').addEventListener('input', displayCards);
+
+document.getElementById('camera-input').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        handleImageFile(e.target.files[0]);
+    }
+});
+
+document.getElementById('gallery-input').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+        handleImageFile(e.target.files[0]);
+    }
+});
+</script>
+</body>
+</html>
