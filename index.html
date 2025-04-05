@@ -728,73 +728,115 @@ const confirmed = confirm(
     // Add global variables for tracking movement
     let startX = 0;
     let isDragging = false;
+    let currentTranslate = 0;
+    let prevTranslate = 0;
+    let animationID = 0;
 
     function handleTouchStart(e) {
         startX = e.touches[0].clientX;
+        currentTranslate = -currentIndex * 100;
     }
 
     function handleMouseDown(e) {
+        e.preventDefault();
         isDragging = true;
         startX = e.clientX;
-        // Add grabbing cursor
-        document.querySelector('.cards-wrapper').style.cursor = 'grabbing';
+        currentTranslate = -currentIndex * 100;
+        
+        // Add grabbing cursor and disable image dragging
+        const wrapper = document.querySelector('.cards-wrapper');
+        wrapper.style.cursor = 'grabbing';
+        wrapper.style.userSelect = 'none';
+        document.querySelectorAll('.card img').forEach(img => {
+            img.style.pointerEvents = 'none';
+        });
     }
 
     function handleTouchMove(e) {
         const touch = e.touches[0];
         const diff = touch.clientX - startX;
-        updateSlidePosition(diff);
+        const wrapper = document.querySelector('.cards-wrapper');
+        const cards = wrapper.children;
+        
+        if (!cards.length) return;
+        
+        // Calculate new position with boundaries
+        const maxTranslate = 0;
+        const minTranslate = -(cards.length - 1) * 100;
+        currentTranslate = Math.max(minTranslate, Math.min(maxTranslate, -currentIndex * 100 + (diff / wrapper.offsetWidth * 100)));
+        
+        updateSlidePosition(currentTranslate);
     }
 
     function handleMouseMove(e) {
         if (!isDragging) return;
+        e.preventDefault();
+        
         const diff = e.clientX - startX;
-        updateSlidePosition(diff);
-    }
-
-    function updateSlidePosition(diff) {
         const wrapper = document.querySelector('.cards-wrapper');
         const cards = wrapper.children;
         
         if (!cards.length) return;
         
-        const offset = -currentIndex * 100 + (diff / wrapper.offsetWidth * 100);
-        wrapper.style.transition = 'none';
-        wrapper.style.transform = `translateX(${offset}%)`;
+        // Calculate new position with boundaries
+        const maxTranslate = 0;
+        const minTranslate = -(cards.length - 1) * 100;
+        currentTranslate = Math.max(minTranslate, Math.min(maxTranslate, -currentIndex * 100 + (diff / wrapper.offsetWidth * 100)));
+        
+        updateSlidePosition(currentTranslate);
     }
 
-    function handleTouchEnd(e) {
-        const diff = e.changedTouches[0].clientX - startX;
-        handleSlideEnd(diff);
+    function updateSlidePosition(translate) {
+        const wrapper = document.querySelector('.cards-wrapper');
+        wrapper.style.transform = `translateX(${translate}%)`;
     }
 
-    function handleMouseUp(e) {
+    function handleTouchEnd() {
+        finishSlideMovement();
+    }
+
+    function handleMouseUp() {
         if (!isDragging) return;
         isDragging = false;
-        const diff = e.clientX - startX;
-        // Remove grabbing cursor
-        document.querySelector('.cards-wrapper').style.cursor = 'grab';
-        handleSlideEnd(diff);
+        
+        // Restore cursor and image dragging
+        const wrapper = document.querySelector('.cards-wrapper');
+        wrapper.style.cursor = 'grab';
+        wrapper.style.userSelect = '';
+        document.querySelectorAll('.card img').forEach(img => {
+            img.style.pointerEvents = 'auto';
+        });
+        
+        finishSlideMovement();
     }
 
-    function handleSlideEnd(diff) {
+    function finishSlideMovement() {
         const wrapper = document.querySelector('.cards-wrapper');
         const cards = wrapper.children;
         
         if (!cards.length) return;
-        
-        const threshold = wrapper.offsetWidth * 0.2;
+
+        // Calculate which slide we should snap to
+        const movePercent = currentTranslate - (-currentIndex * 100);
+        const threshold = 20; // Percentage threshold for slide change
+
         wrapper.style.transition = 'transform 0.3s ease-out';
-
-        if (Math.abs(diff) > threshold) {
-            if (diff > 0 && currentIndex > 0) {
-                currentIndex--;
-            } else if (diff < 0 && currentIndex < cards.length - 1) {
-                currentIndex++;
-            }
+        
+        if (movePercent > threshold && currentIndex > 0) {
+            currentIndex--;
+        } else if (movePercent < -threshold && currentIndex < cards.length - 1) {
+            currentIndex++;
         }
-
-        updateCardPositions();
+        
+        // Snap to the current index
+        currentTranslate = -currentIndex * 100;
+        updateSlidePosition(currentTranslate);
+        
+        // Update dots after animation
+        setTimeout(() => {
+            wrapper.style.transition = '';
+            updateCardPositions();
+        }, 300);
     }
 
     function showImageModal() {
@@ -951,20 +993,19 @@ const confirmed = confirm(
         const display = document.getElementById('display');
         
         // Touch events
-        display.addEventListener('touchstart', handleTouchStart);
-        display.addEventListener('touchmove', handleTouchMove);
+        display.addEventListener('touchstart', handleTouchStart, { passive: true });
+        display.addEventListener('touchmove', handleTouchMove, { passive: false });
         display.addEventListener('touchend', handleTouchEnd);
         
         // Mouse events
         display.addEventListener('mousedown', handleMouseDown);
         display.addEventListener('mousemove', handleMouseMove);
         display.addEventListener('mouseup', handleMouseUp);
-        // Handle case where mouse leaves the window
         display.addEventListener('mouseleave', handleMouseUp);
         
         // Initialize empty cards wrapper and progress dots
         const wrapper = display.querySelector('.cards-wrapper');
-        wrapper.style.cursor = 'grab'; // Add grab cursor by default
+        wrapper.style.cursor = 'grab';
         wrapper.innerHTML = '';
         display.querySelector('.progress-dots').innerHTML = '';
     });
