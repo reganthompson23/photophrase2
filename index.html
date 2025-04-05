@@ -421,6 +421,403 @@
             width: auto;
             margin-right: 8px;
         }
+
+        .dashboard-button {
+            position: absolute;
+            bottom: 30px;
+            right: 20px;
+            background: #34C759;
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .dashboard-button:active {
+            transform: scale(0.95);
+        }
+
+        .dashboard-screen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            padding: 16px;
+            width: 100%;
+            max-width: 420px;
+            height: calc(100vh - 100px);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .dashboard-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .close-dashboard {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .dashboard-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .dashboard-item {
+            padding: 20px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .dashboard-item:hover {
+            background: #f0f0f0;
+        }
+
+        .dashboard-item-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .dashboard-item-arrow {
+            color: #666;
+            font-size: 20px;
+        }
+
+        .cards-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .cards-view-header {
+            display: flex;
+            flex-direction: column;
+            padding: 12px 16px 8px 16px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            gap: 8px;
+        }
+
+        .cards-header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #007AFF;
+            cursor: pointer;
+            padding: 4px;
+            margin: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .back-button:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .cards-view-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #f2f2f7;
+            color: #111;
+            transition: background-color 0.2s;
+        }
+
+        .search-box:focus {
+            background: #e5e5ea;
+            outline: none;
+        }
+
+        .search-box::placeholder {
+            color: #8e8e93;
+        }
+
+        .cards-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: white;
+        }
+
+        .card-item {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 0;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            height: 100px;
+            width: 125px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+        }
+
+        .card-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card-item-word {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 2;
+            padding: 12px;
+            color: rgba(255,255,255,0.95);
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 
+                0 2px 4px rgba(0,0,0,0.9),
+                0 4px 8px rgba(0,0,0,0.7),
+                0 -1px 4px rgba(0,0,0,0.9);
+            margin-right: 24px;
+        }
+
+        .card-item-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        .card-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 125px);
+            gap: 12px;
+            justify-content: center;
+            padding: 16px;
+            background: white;
+            overflow-y: auto;
+        }
+
+        .phrases-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background: white;
+        }
+
+        .phrases-view-header {
+            display: flex;
+            flex-direction: column;
+            padding: 12px 16px 8px 16px;
+            background: white;
+            gap: 8px;
+        }
+
+        .phrases-header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .phrases-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: white;
+        }
+
+        .phrase-item {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 0;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            height: 64px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .phrase-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .phrase-content {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            z-index: 2;
+            padding: 12px;
+            transform: translateY(-50%);
+        }
+
+        .phrase-words {
+            font-size: 15px;
+            color: rgba(255,255,255,0.95);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 
+                0 2px 4px rgba(0,0,0,0.9),
+                0 4px 8px rgba(0,0,0,0.7),
+                0 -1px 4px rgba(0,0,0,0.9);
+            margin-right: 24px;
+        }
+
+        .phrase-name {
+            display: none;
+        }
+
+        .phrase-thumbnails {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .phrase-thumbnail {
+            height: 100%;
+            width: auto;
+            object-fit: cover;
+            flex-shrink: 1;
+            min-width: 64px;
+        }
+
+        .delete-phrase {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            z-index: 3;
+            padding: 4px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            background: rgba(255,59,48,0.5);
+            transition: background-color 0.2s ease;
+        }
+
+        .delete-phrase:hover {
+            background: rgba(255,59,48,0.8);
+        }
+
+        .add-phrase-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #007AFF;
+            color: white;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .add-phrase-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .phrase-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body>
@@ -455,6 +852,7 @@
             <div class="progress-dots"></div>
         </div>
         <button class="add-image-button" onclick="showImageModal()">+</button>
+        <button class="dashboard-button">☰</button>
 
         <!-- Modal -->
         <div class="image-modal" id="imageModal">
@@ -489,6 +887,63 @@
                        id="gallery-input" 
                        class="file-input" 
                        accept="image/*">
+            </div>
+        </div>
+
+        <div class="dashboard-screen">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Dashboard</h1>
+                <button class="close-dashboard" onclick="closeDashboard()">×</button>
+            </div>
+            <div class="dashboard-menu">
+                <div class="dashboard-item" onclick="showDetails()">
+                    <span class="dashboard-item-title">Details</span>
+                    <span class="dashboard-item-arrow">›</span>
+                </div>
+                <div class="dashboard-item" onclick="showCards()">
+                    <span class="dashboard-item-title">Cards</span>
+                    <span class="dashboard-item-arrow">›</span>
+                </div>
+                <div class="dashboard-item" onclick="showPhrases()">
+                    <span class="dashboard-item-title">Phrases</span>
+                    <span class="dashboard-item-arrow">›</span>
+                </div>
+            </div>
+
+            <!-- Cards View -->
+            <div class="cards-view">
+                <div class="cards-view-header">
+                    <div class="cards-header-top">
+                        <button class="back-button" onclick="hideCardsView()">‹</button>
+                        <h2 class="cards-view-title">My Cards</h2>
+                    </div>
+                    <input type="text" class="search-box" placeholder="Search cards..." onkeyup="filterCards(this.value)">
+                </div>
+                <div class="cards-grid"></div>
+            </div>
+
+            <!-- Phrases View -->
+            <div class="phrases-view">
+                <div class="phrases-view-header">
+                    <div class="phrases-header-top">
+                        <button class="back-button" onclick="hidePhrasesView()">‹</button>
+                        <h2 class="cards-view-title">My Phrases</h2>
+                    </div>
+                    <input type="text" class="search-box" placeholder="Search phrases..." onkeyup="filterPhrases(this.value)">
+                </div>
+                <div class="phrases-list"></div>
+                <button class="add-phrase-button" onclick="showAddPhraseModal()">+</button>
+            </div>
+
+            <!-- Add Phrase Modal -->
+            <div class="add-phrase-modal">
+                <div class="modal-content">
+                    <button class="close-modal" onclick="hideAddPhraseModal()">×</button>
+                    <h2 style="margin-bottom: 20px;">Create New Phrase</h2>
+                    <input type="text" class="phrase-input" id="phraseNameInput" placeholder="Enter phrase name...">
+                    <input type="text" class="phrase-input" id="phraseWordsInput" placeholder="Enter words separated by spaces...">
+                    <button class="passphrase-button" onclick="savePhrase()">Save Phrase</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1023,6 +1478,277 @@ const confirmed = confirm(
             handleImageFile(e.target.files[0]);
         }
     });
-</script>
+
+    // Dashboard functionality
+    const dashboardButton = document.querySelector('.dashboard-button');
+    const dashboardScreen = document.querySelector('.dashboard-screen');
+    const dashboardMenu = document.querySelector('.dashboard-menu');
+    const cardsView = document.querySelector('.cards-view');
+    const phrasesView = document.querySelector('.phrases-view');
+
+    dashboardButton.addEventListener('click', () => {
+        dashboardScreen.style.display = 'flex';
+        dashboardMenu.style.display = 'flex';
+        cardsView.style.display = 'none';
+        phrasesView.style.display = 'none';
+    });
+
+    function closeDashboard() {
+        dashboardScreen.style.display = 'none';
+    }
+
+    function showDetails() {
+        // To be implemented
+        alert('Details section coming soon!');
+    }
+
+    async function showCards() {
+        dashboardMenu.style.display = 'none';
+        cardsView.style.display = 'flex';
+        
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
+
+            const { data: cards, error } = await supabase
+                .from('image_words')
+                .select('word, image_url')
+                .eq('user_id', session.user.id);
+
+            if (error) throw error;
+
+            const cardsGrid = document.querySelector('.cards-grid');
+            cardsGrid.innerHTML = '';
+
+            // Sort cards alphabetically by word
+            cards.sort((a, b) => a.word.localeCompare(b.word));
+
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-item';
+                cardElement.setAttribute('data-word', card.word.toLowerCase());
+                
+                const wordElement = document.createElement('div');
+                wordElement.className = 'card-item-word';
+                wordElement.textContent = card.word;
+                
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'card-item-image';
+                
+                const img = document.createElement('img');
+                img.src = card.image_url;
+                img.alt = card.word;
+                
+                imageContainer.appendChild(img);
+                cardElement.appendChild(wordElement);
+                cardElement.appendChild(imageContainer);
+                cardsGrid.appendChild(cardElement);
+            });
+        } catch (error) {
+            console.error('Error loading cards:', error);
+            alert('Failed to load cards');
+        }
+    }
+
+    function hideCardsView() {
+        cardsView.style.display = 'none';
+        dashboardMenu.style.display = 'flex';
+    }
+
+    async function showPhrases() {
+        dashboardMenu.style.display = 'none';
+        phrasesView.style.display = 'flex';
+        await loadPhrases();
+    }
+
+    function hidePhrasesView() {
+        phrasesView.style.display = 'none';
+        dashboardMenu.style.display = 'flex';
+    }
+
+    function filterCards(searchTerm) {
+        const cards = document.querySelectorAll('.card-item');
+        const term = searchTerm.toLowerCase();
+        
+        cards.forEach(card => {
+            const word = card.getAttribute('data-word');
+            if (word.includes(term)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    function filterPhrases(searchTerm) {
+        const phrases = document.querySelectorAll('.phrase-item');
+        const term = searchTerm.toLowerCase();
+        
+        phrases.forEach(phrase => {
+            const phraseName = phrase.getAttribute('data-phrase-name');
+            if (phraseName.includes(term)) {
+                phrase.style.display = 'flex';
+            } else {
+                phrase.style.display = 'none';
+            }
+        });
+    }
+
+    function showAddPhraseModal() {
+        document.querySelector('.add-phrase-modal').style.display = 'block';
+    }
+
+    function hideAddPhraseModal() {
+        document.querySelector('.add-phrase-modal').style.display = 'none';
+        document.getElementById('phraseNameInput').value = '';
+        document.getElementById('phraseWordsInput').value = '';
+    }
+
+    async function savePhrase() {
+        const phraseName = document.getElementById('phraseNameInput').value.trim();
+        const phraseWords = document.getElementById('phraseWordsInput').value.trim().split(/\s+/);
+        
+        if (!phraseName || phraseWords.length === 0) {
+            alert('Please enter both a name and words for the phrase');
+            return;
+        }
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
+
+            const { error } = await supabase
+                .from('phrases')
+                .insert([{
+                    user_id: session.user.id,
+                    phrase_name: phraseName,
+                    words: phraseWords
+                }]);
+
+            if (error) throw error;
+
+            hideAddPhraseModal();
+            await loadPhrases();
+        } catch (error) {
+            console.error('Error saving phrase:', error);
+            alert('Failed to save phrase');
+        }
+    }
+
+    async function loadPhrases() {
+        const phrasesList = document.querySelector('.phrases-list');
+        
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Not authenticated');
+
+            // First get all user's image_words
+            const { data: imageWords, error: imageWordsError } = await supabase
+                .from('image_words')
+                .select('word, image_url')
+                .eq('user_id', session.user.id);
+
+            if (imageWordsError) throw imageWordsError;
+
+            // Create a map of words to their image URLs
+            const wordToImage = {};
+            imageWords.forEach(iw => {
+                wordToImage[iw.word.toLowerCase()] = iw.image_url;
+            });
+
+            const { data: phrases, error } = await supabase
+                .from('phrases')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            // Clear existing phrases
+            phrasesList.innerHTML = '';
+
+            phrases.forEach(phrase => {
+                const phraseElement = document.createElement('div');
+                phraseElement.className = 'phrase-item';
+                phraseElement.setAttribute('data-phrase-name', phrase.phrase_name.toLowerCase());
+                phraseElement.onclick = () => loadPhraseIntoApp(phrase);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'phrase-content';
+
+                const nameElement = document.createElement('div');
+                nameElement.className = 'phrase-name';
+                nameElement.textContent = phrase.phrase_name;
+
+                const wordsElement = document.createElement('div');
+                wordsElement.className = 'phrase-words';
+                wordsElement.textContent = phrase.words.join(' ');
+
+                // Create thumbnails container
+                const thumbnailsDiv = document.createElement('div');
+                thumbnailsDiv.className = 'phrase-thumbnails';
+
+                // Add thumbnails for each word that has an image
+                phrase.words.forEach(word => {
+                    const imageUrl = wordToImage[word.toLowerCase()];
+                    if (imageUrl) {
+                        const thumbnail = document.createElement('img');
+                        thumbnail.className = 'phrase-thumbnail';
+                        thumbnail.src = imageUrl;
+                        thumbnail.alt = word;
+                        thumbnailsDiv.appendChild(thumbnail);
+                    }
+                });
+
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'delete-phrase';
+                deleteButton.innerHTML = '×';
+                deleteButton.onclick = (e) => {
+                    e.stopPropagation();
+                    deletePhrase(phrase.id);
+                };
+
+                contentDiv.appendChild(nameElement);
+                contentDiv.appendChild(wordsElement);
+                phraseElement.appendChild(contentDiv);
+                phraseElement.appendChild(thumbnailsDiv);
+                phraseElement.appendChild(deleteButton);
+                phrasesList.appendChild(phraseElement);
+            });
+        } catch (error) {
+            console.error('Error loading phrases:', error);
+            alert('Failed to load phrases');
+        }
+    }
+
+    function loadPhraseIntoApp(phrase) {
+        // Close the dashboard
+        document.querySelector('.dashboard-screen').style.display = 'none';
+        
+        // Set the input value
+        document.getElementById('input').value = phrase.words.join(' ');
+        
+        // Trigger the input event to load the cards
+        document.getElementById('input').dispatchEvent(new Event('input'));
+    }
+
+    async function deletePhrase(phraseId) {
+        if (!confirm('Are you sure you want to delete this phrase?')) return;
+
+        try {
+            const { error } = await supabase
+                .from('phrases')
+                .delete()
+                .eq('id', phraseId);
+
+            if (error) throw error;
+
+            await loadPhrases();
+        } catch (error) {
+            console.error('Error deleting phrase:', error);
+            alert('Failed to delete phrase');
+        }
+    }
+    </script>
 </body>
 </html>
