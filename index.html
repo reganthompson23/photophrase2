@@ -725,13 +725,34 @@ const confirmed = confirm(
         updateCardPositions();
     }
 
+    // Add global variables for tracking movement
+    let startX = 0;
+    let isDragging = false;
+
     function handleTouchStart(e) {
         startX = e.touches[0].clientX;
+    }
+
+    function handleMouseDown(e) {
+        isDragging = true;
+        startX = e.clientX;
+        // Add grabbing cursor
+        document.querySelector('.cards-wrapper').style.cursor = 'grabbing';
     }
 
     function handleTouchMove(e) {
         const touch = e.touches[0];
         const diff = touch.clientX - startX;
+        updateSlidePosition(diff);
+    }
+
+    function handleMouseMove(e) {
+        if (!isDragging) return;
+        const diff = e.clientX - startX;
+        updateSlidePosition(diff);
+    }
+
+    function updateSlidePosition(diff) {
         const wrapper = document.querySelector('.cards-wrapper');
         const cards = wrapper.children;
         
@@ -743,14 +764,26 @@ const confirmed = confirm(
     }
 
     function handleTouchEnd(e) {
+        const diff = e.changedTouches[0].clientX - startX;
+        handleSlideEnd(diff);
+    }
+
+    function handleMouseUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        const diff = e.clientX - startX;
+        // Remove grabbing cursor
+        document.querySelector('.cards-wrapper').style.cursor = 'grab';
+        handleSlideEnd(diff);
+    }
+
+    function handleSlideEnd(diff) {
         const wrapper = document.querySelector('.cards-wrapper');
         const cards = wrapper.children;
         
         if (!cards.length) return;
         
-        const diff = e.changedTouches[0].clientX - startX;
         const threshold = wrapper.offsetWidth * 0.2;
-
         wrapper.style.transition = 'transform 0.3s ease-out';
 
         if (Math.abs(diff) > threshold) {
@@ -916,12 +949,23 @@ const confirmed = confirm(
     // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {
         const display = document.getElementById('display');
+        
+        // Touch events
         display.addEventListener('touchstart', handleTouchStart);
         display.addEventListener('touchmove', handleTouchMove);
         display.addEventListener('touchend', handleTouchEnd);
         
+        // Mouse events
+        display.addEventListener('mousedown', handleMouseDown);
+        display.addEventListener('mousemove', handleMouseMove);
+        display.addEventListener('mouseup', handleMouseUp);
+        // Handle case where mouse leaves the window
+        display.addEventListener('mouseleave', handleMouseUp);
+        
         // Initialize empty cards wrapper and progress dots
-        display.querySelector('.cards-wrapper').innerHTML = '';
+        const wrapper = display.querySelector('.cards-wrapper');
+        wrapper.style.cursor = 'grab'; // Add grab cursor by default
+        wrapper.innerHTML = '';
         display.querySelector('.progress-dots').innerHTML = '';
     });
 
