@@ -23,26 +23,22 @@ exports.handler = async (event) => {
         
         if (authError) throw authError;
 
-        // Get user's stored items
+        // Get user's image-word pairs
         const { data, error } = await supabase
-            .from('stored_items')
-            .select('content, created_at')
+            .from('image_words')
+            .select('word, image_url, created_at')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // Create an object to store the latest version of each word
-        const latestImages = {};
+        // Create an object to store the images by word
+        const images = {};
         
-        // Process the data to get latest images
+        // Process the data to map words to images
         data.forEach(item => {
-            if (item.content && item.content.images) {
-                Object.entries(item.content.images).forEach(([word, image]) => {
-                    if (!latestImages[word]) {
-                        latestImages[word] = image;
-                    }
-                });
+            if (!images[item.word]) {
+                images[item.word] = item.image_url;
             }
         });
 
@@ -52,7 +48,7 @@ exports.handler = async (event) => {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify({ data: { images: latestImages } })
+            body: JSON.stringify({ data: { images } })
         };
     } catch (error) {
         console.error('Error:', error);

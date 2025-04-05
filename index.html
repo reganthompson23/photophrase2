@@ -493,10 +493,104 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-    let currentPassphrase = '';
-    let customImages = {};
+    const supabaseUrl = 'https://uzkdwpgavnsspmpnigeg.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6a2R3cGdhdm5zc3BtcG5pZ2VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4MDg3NjAsImV4cCI6MjA1OTM4NDc2MH0.N86kObWF4thDRl9SpdYQ-2MiFm4fD6oxTAJ8vDhXiYw';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
     let isLoginMode = true;
+    let customImages = {};
+
+    function toggleAuthMode(event) {
+        event.preventDefault();
+        isLoginMode = !isLoginMode;
+        const buttonText = document.getElementById('authButtonText');
+        const toggleText = document.getElementById('authToggleText');
+        const toggleButton = event.target;
+
+        if (isLoginMode) {
+            buttonText.textContent = 'Login';
+            toggleText.textContent = "Don't have an account?";
+            toggleButton.textContent = 'Sign up';
+        } else {
+            buttonText.textContent = 'Sign up';
+            toggleText.textContent = 'Already have an account?';
+            toggleButton.textContent = 'Login';
+        }
+    }
+
+    async function handleAuth() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            let response;
+            if (isLoginMode) {
+                response = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+            } else {
+                response = await supabase.auth.signUp({
+                    email,
+                    password
+                });
+            }
+
+            if (response.error) throw response.error;
+
+            document.getElementById('loginScreen').style.display = 'none';
+            loadUserData();
+        } catch (error) {
+            console.error('Auth error:', error);
+            alert('An error occurred during ' + (isLoginMode ? 'login' : 'signup'));
+        }
+    }
+
+    async function loadUserData() {
+        try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) throw sessionError;
+            
+            if (!session) {
+                document.getElementById('loginScreen').style.display = 'flex';
+                return;
+            }
+
+            // Load saved images
+            const { data: imageData, error: imageError } = await supabase
+                .from('image_words')
+                .select('word, image_url')
+                .eq('user_id', session.user.id);
+
+            if (imageError) throw imageError;
+
+            // Reset and update customImages
+            customImages = {};
+            if (imageData) {
+                console.log('Loaded image data:', imageData);
+                imageData.forEach(item => {
+                    if (item.word && item.image_url) {
+                        console.log('Loading image for word:', item.word, 'URL:', item.image_url);
+                        customImages[item.word] = item.image_url;
+                    }
+                });
+            }
+
+            console.log('Final customImages object:', customImages);
+            document.getElementById('loginScreen').style.display = 'none';
+            displayCards();
+        } catch (error) {
+            console.error('Error loading data:', error);
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+    }
+
+    // Call this when the page loads
+    document.addEventListener('DOMContentLoaded', loadUserData);
+
+    let currentPassphrase = '';
 
     // Check for saved passphrase and load data when app starts
     document.addEventListener('DOMContentLoaded', async function() {
@@ -566,24 +660,6 @@ const confirmed = confirm(
         await retrieveData(); // Retrieve data when passphrase is entered
     }
         
-    const colors = [
-        '#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6', 
-        '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
-        '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A', 
-        '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
-    ];
-
-    let startX = 0;
-    let currentIndex = 0;
-
-    function getColor(word) {
-        let hash = 0;
-        for (let i = 0; i < word.length; i++) {
-            hash = word.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
-    }
-
     function fitTextToContainer(element) {
         let fontSize = 24;
         element.style.fontSize = fontSize + 'px';
@@ -624,9 +700,11 @@ const confirmed = confirm(
                 const img = document.createElement('img');
                 img.src = customImages[word];
                 img.alt = word;
+                img.onerror = function() {
+                    console.error('Failed to load image for word:', word);
+                    this.remove();
+                };
                 card.appendChild(img);
-            } else {
-                card.style.backgroundColor = getColor(word);
             }
             
             const wordElement = document.createElement('div');
@@ -755,39 +833,82 @@ const confirmed = confirm(
 
     async function storeData(data) {
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('Not authenticated');
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) throw sessionError;
+            if (!session) throw new Error('Not authenticated');
+
+            // Extract the word and image data
+            const [[word, imageData]] = Object.entries(data.images);
+            console.log('Storing image for word:', word);
+
+            // Convert base64 to file if needed
+            let imageFile;
+            if (imageData.startsWith('data:image')) {
+                const res = await fetch(imageData);
+                const blob = await res.blob();
+                imageFile = new File([blob], `${word}.jpg`, { type: 'image/jpeg' });
             }
 
-            const response = await fetch('/.netlify/functions/storage', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    content: data
-                })
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server error:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    error: errorText
+            // Upload to storage
+            const filePath = `${session.user.id}/${word}.jpg`;
+            console.log('Uploading to path:', filePath);
+            
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, imageFile || imageData, {
+                    upsert: true,
+                    contentType: 'image/jpeg'
                 });
-                throw new Error(`HTTP error! status: ${response.status}`);
+
+            if (uploadError) {
+                console.error('Upload error:', uploadError);
+                throw uploadError;
             }
 
-            const result = await response.json();
-            console.log('Storage successful:', result);
-            return result;
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('images')
+                .getPublicUrl(filePath);
+
+            const publicUrl = urlData.publicUrl;
+            console.log('Generated public URL:', publicUrl);
+
+            // First delete any existing entry for this word
+            await supabase
+                .from('image_words')
+                .delete()
+                .match({ user_id: session.user.id, word: word });
+
+            // Then insert the new entry
+            const { error: dbError } = await supabase
+                .from('image_words')
+                .insert({
+                    user_id: session.user.id,
+                    word: word,
+                    image_url: publicUrl
+                });
+
+            if (dbError) {
+                console.error('Database error:', dbError);
+                throw dbError;
+            }
+
+            // Update local state immediately
+            customImages[word] = publicUrl;
+            console.log('Updated customImages:', word, publicUrl);
+            
+            // Force a display update
+            displayCards();
+
+            hideImageModal();
+            document.getElementById('word-input').value = '';
+            return { success: true };
         } catch (error) {
             console.error('Storage error:', error);
-            alert('Failed to save image. Please try logging in again.');
-            document.getElementById('loginScreen').style.display = 'flex';
+            if (error.message === 'Not authenticated') {
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
+            alert('Failed to save image: ' + error.message);
             throw error;
         }
     }
@@ -817,86 +938,6 @@ const confirmed = confirm(
             handleImageFile(e.target.files[0]);
         }
     });
-
-    function toggleAuthMode(event) {
-        event.preventDefault();
-        isLoginMode = !isLoginMode;
-        const buttonText = document.getElementById('authButtonText');
-        const toggleText = document.getElementById('authToggleText');
-        const toggleButton = event.target;
-
-        if (isLoginMode) {
-            buttonText.textContent = 'Login';
-            toggleText.textContent = "Don't have an account?";
-            toggleButton.textContent = 'Sign up';
-        } else {
-            buttonText.textContent = 'Sign up';
-            toggleText.textContent = 'Already have an account?';
-            toggleButton.textContent = 'Login';
-        }
-    }
-
-    async function handleAuth() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const rememberMe = document.getElementById('rememberMe').checked;
-
-        try {
-            const endpoint = isLoginMode ? 'auth' : 'signup';
-            const response = await fetch(`/.netlify/functions/${endpoint}`, {
-                method: 'POST',
-                body: JSON.stringify({ email, password, rememberMe }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                document.getElementById('loginScreen').style.display = 'none';
-                loadUserData();
-            } else {
-                const error = await response.json();
-                alert(error.error || (isLoginMode ? 'Invalid email or password' : 'Failed to create account'));
-            }
-        } catch (error) {
-            console.error('Auth error:', error);
-            alert('An error occurred during ' + (isLoginMode ? 'login' : 'signup'));
-        }
-    }
-
-    async function loadUserData() {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                document.getElementById('loginScreen').style.display = 'flex';
-                return;
-            }
-
-            const response = await fetch('/.netlify/functions/retrieve', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                const { data } = await response.json();
-                if (data && data.images) {
-                    customImages = data.images;
-                    displayCards();
-                }
-            } else {
-                document.getElementById('loginScreen').style.display = 'flex';
-            }
-        } catch (error) {
-            console.error('Error loading data:', error);
-            document.getElementById('loginScreen').style.display = 'flex';
-        }
-    }
-
-    // Call this when the page loads
-    document.addEventListener('DOMContentLoaded', loadUserData);
 </script>
 </body>
 </html>
